@@ -83,20 +83,16 @@ const is_query_response = scanner({
 
 type ExtractGuardType<T> = T extends Condition<infer U> ? U : never
 
-export class D1 {
-  private account_id
-  private api_key
-
-  constructor(params: CFAuthParameter) {
-    this.account_id = params.accountId
-    this.api_key = params.apiKey
-  }
-
-  async list(params?: { name?: string; page?: number; per_page?: number }) {
+export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
+  list: async (params?: {
+    name?: string
+    page?: number
+    per_page?: number
+  }) => {
     const { name, page, per_page } = params ?? {}
 
     const url = new URL(
-      `https://api.cloudflare.com/client/v4/accounts/${this.account_id}/d1/database`
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database`
     )
 
     if (name) {
@@ -115,7 +111,7 @@ export class D1 {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.api_key}`
+        Authorization: `Bearer ${apiKey}`
       }
     })
 
@@ -126,16 +122,16 @@ export class D1 {
     }
 
     return json
-  }
+  },
 
   async create(name: string) {
     const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${this.account_id}/d1/database`,
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.api_key}`
+          Authorization: `Bearer ${apiKey}`
         },
         body: JSON.stringify({ name })
       }
@@ -148,63 +144,61 @@ export class D1 {
     }
 
     return json
-  }
+  },
 
-  async delete(uuid: string) {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${this.account_id}/d1/database/${uuid}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.api_key}`
+  prepare: (uuid: string) => ({
+    delete: async () => {
+      const res = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${uuid}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`
+          }
         }
+      )
+
+      const json = await res.json()
+
+      if (!is_delete_response(json)) {
+        throw new Error('Invalid delete response')
       }
-    )
 
-    const json = await res.json()
-
-    if (!is_delete_response(json)) {
-      throw new Error('Invalid delete response')
-    }
-
-    return json
-  }
-
-  async get(uuid: string) {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${this.account_id}/d1/database/${uuid}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.api_key}`
+      return json
+    },
+    get: async () => {
+      const res = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${uuid}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`
+          }
         }
+      )
+
+      const json = await res.json()
+
+      if (!is_get_response(json)) {
+        throw new Error('Invalid get response')
       }
-    )
 
-    const json = await res.json()
-
-    if (!is_get_response(json)) {
-      throw new Error('Invalid get response')
-    }
-
-    return json
-  }
-
-  prepareQuery(uuid: string) {
+      return json
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return async <T extends Record<string, any>>(
+    query: async <T extends Record<string, any>>(
       sql: string,
       params: (string | number)[] = []
     ) => {
       const res = await fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${this.account_id}/d1/database/${uuid}/query`,
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${uuid}/query`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.api_key}`
+            Authorization: `Bearer ${apiKey}`
           },
           body: JSON.stringify({ params, sql })
         }
@@ -231,5 +225,5 @@ export class D1 {
 
       return json as QueryResult
     }
-  }
-}
+  })
+})
