@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import 'dotenv/config'
+import { expect, test } from 'vitest'
 import { StarSystem } from '../src/StarSystem'
 
 test('test', async () => {
@@ -9,7 +9,7 @@ test('test', async () => {
     apiKey: process.env.API_KEY!
   })
 
-  const main = await ss.createBranch(`main-${crypto.randomUUID()}`)
+  const main = await ss.createBranch(`main`)
 
   console.log('main', main)
 
