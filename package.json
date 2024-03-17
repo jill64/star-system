@@ -1,5 +1,6 @@
 {
   "name": "star-system",
+  "description": "",
   "type": "module",
   "files": [
     "dist",
