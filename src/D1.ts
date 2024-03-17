@@ -81,6 +81,20 @@ const is_query_response = scanner({
   )
 })
 
+const checkError = (response: {
+  success: boolean
+  errors: {
+    code: string
+    message: string
+  }[]
+}) => {
+  if (!response.success) {
+    throw new Error(
+      response.errors.map((e) => `${e.code}: ${e.message}`).join('\n')
+    )
+  }
+}
+
 type ExtractGuardType<T> = T extends Condition<infer U> ? U : never
 
 export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
@@ -121,6 +135,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
       throw new Error('Invalid response')
     }
 
+    checkError(json)
+
     return json
   },
 
@@ -142,6 +158,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
     if (!is_create_response(json)) {
       throw new Error('Invalid create response')
     }
+
+    checkError(json)
 
     return json
   },
@@ -165,6 +183,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
         throw new Error('Invalid delete response')
       }
 
+      checkError(json)
+
       return json
     },
     get: async () => {
@@ -184,6 +204,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
       if (!is_get_response(json)) {
         throw new Error('Invalid get response')
       }
+
+      checkError(json)
 
       return json
     },
@@ -209,6 +231,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
       if (!is_query_response(json)) {
         throw new Error('Invalid query response')
       }
+
+      checkError(json)
 
       type QueryResponse = ExtractGuardType<typeof is_query_response>
 

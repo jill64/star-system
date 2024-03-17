@@ -1,20 +1,13 @@
 import type { D1 } from './D1.js'
-
-const checkError = (response: {
-  success: boolean
-  errors: {
-    code: string
-    message: string
-  }[]
-}) => {
-  if (!response.success) {
-    throw new Error(
-      response.errors.map((e) => `${e.code}: ${e.message}`).join('\n')
-    )
-  }
-}
+import { Column } from './types/Column.js'
+import { IndexKey } from './types/IndexKey.js'
+import { Table } from './types/Table.js'
+import { TableDiff } from './types/TableDiff.js'
 
 type Prepared = ReturnType<ReturnType<typeof D1>['prepare']>
+
+const nonNullable = <T>(x: T): x is NonNullable<T> =>
+  x !== null && x !== undefined
 
 export class Branch {
   query: Prepared['query']
@@ -23,22 +16,17 @@ export class Branch {
   private name
 
   constructor(d1: Prepared, name: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.query = d1.query
     this.delete = d1.delete
     this.get = d1.get
+
     this.name = name
   }
 
   // https://developers.cloudflare.com/d1/reference/database-commands/
   async get_schema() {
-    const table_list = await this.query<{
-      schema: string
-      name: string
-      type: string
-      ncol: number
-      wr: number
-      strict: number
-    }>(`PRAGMA table_list`)
+    const table_list = await this.query<Table>(`PRAGMA table_list`)
 
     const tables = table_list.result
       .flatMap((table) => table.results)
@@ -47,21 +35,8 @@ export class Branch {
     const map = await Promise.all(
       tables.map(async (table) => {
         const [table_info, index_list] = await Promise.all([
-          this.query<{
-            cid: number
-            name: string
-            type: string
-            notnull: number
-            dflt_value: string
-            pk: number
-          }>(`PRAGMA table_info(?)`, [table.name]),
-          this.query<{
-            seq: number
-            name: string
-            unique: number
-            origin: string
-            partial: number
-          }>(`PRAGMA index_list(?)`, [table.name])
+          this.query<Column>(`PRAGMA table_info(?)`, [table.name]),
+          this.query<IndexKey>(`PRAGMA index_list(?)`, [table.name])
         ])
 
         return [
@@ -80,5 +55,90 @@ export class Branch {
 
   // mergeTo(base: Branch) {}
 
-  // diffFrom(base: Branch) {}
+  async diffFrom(base: Branch): Promise<TableDiff> {
+    const [head_schema, base_schema] = await Promise.all([
+      this.get_schema(),
+      base.get_schema()
+    ])
+
+    const addTables = [...head_schema.keys()]
+      .filter((table) => !base_schema.has(table))
+      .map((table) => head_schema.get(table)?.table)
+      .filter(nonNullable)
+
+    const dropTables = [...base_schema.keys()]
+      .filter((table) => !head_schema.has(table))
+      .map((table) => base_schema.get(table)?.table)
+      .filter(nonNullable)
+
+    const modifyTables = [...head_schema.keys()]
+      .filter((table) => base_schema.has(table))
+      .map((table) => {
+        const head = head_schema.get(table)
+        const base = base_schema.get(table)
+
+        if (head === undefined || base === undefined) {
+          throw new Error('Unexpected undefined')
+        }
+
+        const columnDiff = {
+          addColumns: head.table_info.filter(
+            (column) => !base.table_info.some((c) => c.cid === column.cid)
+          ),
+          dropColumns: base.table_info.filter(
+            (column) => !head.table_info.some((c) => c.cid === column.cid)
+          ),
+          modifyColumns: head.table_info.filter((column) => {
+            const baseColumn = base.table_info.find((c) => c.cid === column.cid)
+
+            if (baseColumn === undefined) {
+              return false
+            }
+
+            return (
+              baseColumn.type !== column.type ||
+              baseColumn.notnull !== column.notnull ||
+              baseColumn.dflt_value !== column.dflt_value ||
+              baseColumn.pk !== column.pk ||
+              baseColumn.name !== column.name
+            )
+          })
+        }
+
+        const indexDiff = {
+          addIndexes: head.index_list.filter(
+            (index) => !base.index_list.some((i) => i.name === index.name)
+          ),
+          dropIndexes: base.index_list.filter(
+            (index) => !head.index_list.some((i) => i.name === index.name)
+          ),
+          modifyIndexes: head.index_list.filter((index) => {
+            const baseIndex = base.index_list.find((i) => i.name === index.name)
+
+            if (baseIndex === undefined) {
+              return false
+            }
+
+            return (
+              baseIndex.unique !== index.unique ||
+              baseIndex.origin !== index.origin ||
+              baseIndex.partial !== index.partial ||
+              baseIndex.seq !== index.seq
+            )
+          })
+        }
+
+        return {
+          ...head.table,
+          columnDiff,
+          indexDiff
+        }
+      })
+
+    return {
+      addTables,
+      dropTables,
+      modifyTables
+    }
+  }
 }

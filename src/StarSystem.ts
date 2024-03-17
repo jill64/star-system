@@ -2,20 +2,6 @@ import { Branch } from './Branch.js'
 import { D1 } from './D1.js'
 import { CFAuthParameter } from './types/CFAuthParameter.js'
 
-const checkError = (response: {
-  success: boolean
-  errors: {
-    code: string
-    message: string
-  }[]
-}) => {
-  if (!response.success) {
-    throw new Error(
-      response.errors.map((e) => `${e.code}: ${e.message}`).join('\n')
-    )
-  }
-}
-
 export class StarSystem {
   private d1
   private prefix
@@ -34,8 +20,6 @@ export class StarSystem {
       name: `${this.prefix}_branch`
     })
 
-    checkError(res)
-
     return res.result.map(
       (branch) => new Branch(this.d1.prepare(branch.uuid), branch.name)
     )
@@ -43,8 +27,6 @@ export class StarSystem {
 
   async createBranch(name: string): Promise<Branch> {
     const res = await this.d1.create(`${this.prefix}_branch_${name}`)
-
-    checkError(res)
 
     return new Branch(this.d1.prepare(res.result.uuid), res.result.name)
   }
