@@ -8,8 +8,6 @@
 
 <!----- END GHOST DOCS BADGES ----->
 
-⭐ Staging RDB with Cloudflare D1
-
 <!----- END GHOST DOCS HEADER ----->
 
 <!----- BEGIN GHOST DOCS FOOTER ----->
