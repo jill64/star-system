@@ -3,6 +3,6 @@ export type Column = {
   name: string
   type: string
   notnull: number
-  dflt_value: string
+  dflt_value: string | null
   pk: number
 }
