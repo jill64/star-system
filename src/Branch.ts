@@ -14,13 +14,15 @@ const checkError = (response: {
   }
 }
 
+type Prepared = ReturnType<ReturnType<typeof D1>['prepare']>
+
 export class Branch {
-  query: ReturnType<ReturnType<typeof D1>['prepare']>['query']
-  delete: ReturnType<ReturnType<typeof D1>['prepare']>['delete']
-  get: ReturnType<ReturnType<typeof D1>['prepare']>['get']
+  query: Prepared['query']
+  delete: Prepared['delete']
+  get: Prepared['get']
   private name
 
-  constructor(d1: ReturnType<ReturnType<typeof D1>['prepare']>, name: string) {
+  constructor(d1: Prepared, name: string) {
     this.query = d1.query
     this.delete = d1.delete
     this.get = d1.get
@@ -76,7 +78,7 @@ export class Branch {
     return new Map(map)
   }
 
-  mergeTo(base: Branch) {}
+  // mergeTo(base: Branch) {}
 
-  diffFrom(base: Branch) {}
+  // diffFrom(base: Branch) {}
 }
