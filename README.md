@@ -12,10 +12,6 @@
 
 <!----- END GHOST DOCS HEADER ----->
 
-# star-system
-
-⭐ Staging RDB with Cloudflare D1
-
 <!----- BEGIN GHOST DOCS FOOTER ----->
 
 ## License
