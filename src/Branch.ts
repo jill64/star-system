@@ -30,13 +30,18 @@ export class Branch {
 
     const tables = table_list.result
       .flatMap((table) => table.results)
-      .filter((table) => table.name.startsWith(this.name))
+      .filter(
+        (t) =>
+          t.name !== 'sqlite_schema' &&
+          t.name !== '_cf_KV' &&
+          t.name !== 'sqlite_temp_schema'
+      )
 
     const map = await Promise.all(
       tables.map(async (table) => {
         const [table_info, index_list] = await Promise.all([
-          this.query<Column>(`PRAGMA table_info(?)`, [table.name]),
-          this.query<IndexKey>(`PRAGMA index_list(?)`, [table.name])
+          this.query<Column>(`PRAGMA table_info(${table.name})`),
+          this.query<IndexKey>(`PRAGMA index_list(${table.name})`)
         ])
 
         return [
