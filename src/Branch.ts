@@ -45,8 +45,8 @@ export class Branch {
           table.name,
           {
             table,
-            table_info: table_info.result.flatMap((column) => column.results),
-            index_list: index_list.result.flatMap((index) => index.results)
+            columns: table_info.result.flatMap((column) => column.results),
+            indexes: index_list.result.flatMap((index) => index.results)
           }
         ] as const
       })
@@ -54,8 +54,6 @@ export class Branch {
 
     return new Map(map)
   }
-
-  // mergeTo(base: Branch) {}
 
   async diffFrom(base: Branch): Promise<TableDiff> {
     const [head_schema, base_schema] = await Promise.all([
@@ -65,7 +63,7 @@ export class Branch {
 
     const addTables = [...head_schema.keys()]
       .filter((table) => !base_schema.has(table))
-      .map((table) => head_schema.get(table)?.table)
+      .map((table) => head_schema.get(table))
       .filter(nonNullable)
 
     const dropTables = [...base_schema.keys()]
@@ -84,16 +82,14 @@ export class Branch {
         }
 
         const columnDiff = {
-          addColumns: head.table_info.filter(
-            (column) => !base.table_info.some((c) => c.name === column.name)
+          addColumns: head.columns.filter(
+            (column) => !base.columns.some((c) => c.name === column.name)
           ),
-          dropColumns: base.table_info.filter(
-            (column) => !head.table_info.some((c) => c.name === column.name)
+          dropColumns: base.columns.filter(
+            (column) => !head.columns.some((c) => c.name === column.name)
           ),
-          modifyColumns: head.table_info.filter((column) => {
-            const baseColumn = base.table_info.find(
-              (c) => c.name === column.name
-            )
+          modifyColumns: head.columns.filter((column) => {
+            const baseColumn = base.columns.find((c) => c.name === column.name)
 
             if (baseColumn === undefined) {
               return false
@@ -110,14 +106,14 @@ export class Branch {
         }
 
         const indexDiff = {
-          addIndexes: head.index_list.filter(
-            (index) => !base.index_list.some((i) => i.name === index.name)
+          addIndexes: head.indexes.filter(
+            (index) => !base.indexes.some((i) => i.name === index.name)
           ),
-          dropIndexes: base.index_list.filter(
-            (index) => !head.index_list.some((i) => i.name === index.name)
+          dropIndexes: base.indexes.filter(
+            (index) => !head.indexes.some((i) => i.name === index.name)
           ),
-          modifyIndexes: head.index_list.filter((index) => {
-            const baseIndex = base.index_list.find((i) => i.name === index.name)
+          modifyIndexes: head.indexes.filter((index) => {
+            const baseIndex = base.indexes.find((i) => i.name === index.name)
 
             if (baseIndex === undefined) {
               return false
@@ -144,5 +140,9 @@ export class Branch {
       dropTables,
       modifyTables
     }
+  }
+
+  async deploy(diff: TableDiff) {
+    
   }
 }
