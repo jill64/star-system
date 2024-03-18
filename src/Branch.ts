@@ -101,12 +101,15 @@ export class Branch {
         const base = base_schema.get(table)
 
         if (head === undefined || base === undefined) {
-          throw new Error('Unexpected undefined')
+          throw new Error(`Unexpected undefined table ${table}`)
         }
 
         const columnDiff: ColumnDiff = {
           addColumns: head.columns.filter(
-            (column) => !base.columns.some((c) => c.name === column.name)
+            (column) => !base.columns.some((c) => c.cid === column.cid)
+          ),
+          dropColumns: base.columns.filter(
+            (column) => !head.columns.some((c) => c.cid === column.cid)
           )
         }
 
@@ -116,7 +119,27 @@ export class Branch {
           ),
           dropIndexes: base.indexes.filter(
             (index) => !head.indexes.some((i) => i.name === index.name)
-          )
+          ),
+          modifyIndexes: head.indexes.filter((index) => {
+            const baseIndex = base.indexes.find((i) => i.name === index.name)
+
+            if (baseIndex === undefined) {
+              throw new Error(`Unexpected undefined index ${index.name}`)
+            }
+
+            return (
+              index.unique !== baseIndex.unique ||
+              index.origin !== baseIndex.origin ||
+              index.partial !== baseIndex.partial ||
+              index.columns.some(
+                (column) =>
+                  !baseIndex.columns.some((c) => c.name === column.name)
+              ) ||
+              baseIndex.columns.some(
+                (column) => !index.columns.some((c) => c.name === column.name)
+              )
+            )
+          })
         }
 
         return {
@@ -138,22 +161,31 @@ export class Branch {
     callback: (
       status:
         | 'DROPPING_TABLE'
+        | 'DROPPING_COLUMN'
         | 'DROPPING_INDEX'
         | 'CREATING_TABLE'
         | 'CREATING_COLUMN'
         | 'CREATING_INDEX'
+        | 'MODIFYING_INDEX'
     ) => unknown
   ) {
     const diff = await this.diffFrom(base)
 
     await callback('DROPPING_TABLE')
-
     await Promise.all(
       diff.dropTables.map((table) => base.query(`DROP TABLE ${table.name}`))
     )
 
-    await callback('DROPPING_INDEX')
+    await callback('DROPPING_COLUMN')
+    await Promise.all(
+      diff.modifyTables.flatMap((table) =>
+        table.columnDiff.dropColumns.map((column) =>
+          base.query(`ALTER TABLE ${table.name} DROP COLUMN ${column.name}`)
+        )
+      )
+    )
 
+    await callback('DROPPING_INDEX')
     await Promise.all(
       diff.modifyTables.flatMap((table) =>
         table.indexDiff.dropIndexes.map((index) =>
@@ -163,7 +195,6 @@ export class Branch {
     )
 
     await callback('CREATING_TABLE')
-
     await Promise.all(
       diff.addTables.map((table) => {
         const columns = table.columns
@@ -180,21 +211,21 @@ export class Branch {
     )
 
     await callback('CREATING_COLUMN')
-
     await Promise.all(
       diff.modifyTables.flatMap((table) =>
         table.columnDiff.addColumns.map((column) =>
           base.query(
-            `ALTER TABLE ${table.name} ADD COLUMN ${column.name} ${column.type}${
-              column.notnull ? ' NOT NULL' : ''
-            }${column.dflt_value ? ` DEFAULT ${column.dflt_value}` : ''}`
+            `ALTER TABLE ${table.name} ADD COLUMN ${column.name} ${
+              column.type
+            }${column.notnull ? ' NOT NULL' : ''}${
+              column.dflt_value ? ` DEFAULT ${column.dflt_value}` : ''
+            }`
           )
         )
       )
     )
 
     await callback('CREATING_INDEX')
-
     await Promise.all(
       diff.modifyTables.flatMap((table) =>
         table.indexDiff.addIndexes.map((index) => {
@@ -202,6 +233,21 @@ export class Branch {
 
           return base.query(
             `CREATE INDEX ${index.name} ON ${table.name} (${columns})`
+          )
+        })
+      )
+    )
+
+    await callback('MODIFYING_INDEX')
+    await Promise.all(
+      diff.modifyTables.flatMap((table) =>
+        table.indexDiff.modifyIndexes.map((index) => {
+          const columns = index.columns.map((column) => column.name).join(', ')
+
+          return base.query(`DROP INDEX ${index.name}`).then(() =>
+            base.query(
+              `CREATE INDEX ${index.name} ON ${table.name} (${columns})`
+            )
           )
         })
       )
