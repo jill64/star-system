@@ -244,11 +244,13 @@ export class Branch {
         table.indexDiff.modifyIndexes.map((index) => {
           const columns = index.columns.map((column) => column.name).join(', ')
 
-          return base.query(`DROP INDEX ${index.name}`).then(() =>
-            base.query(
-              `CREATE INDEX ${index.name} ON ${table.name} (${columns})`
+          return base
+            .query(`DROP INDEX ${index.name}`)
+            .then(() =>
+              base.query(
+                `CREATE INDEX ${index.name} ON ${table.name} (${columns})`
+              )
             )
-          )
         })
       )
     )
