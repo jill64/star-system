@@ -1,4 +1,12 @@
-import { array, boolean, isNull, number, scanner, string } from 'typescanner'
+import {
+  array,
+  boolean,
+  isNull,
+  number,
+  scanner,
+  string,
+  union
+} from 'typescanner'
 import type { Condition } from 'typescanner/dist/types/index.js'
 import { CFAuthParameter } from './types/CFAuthParameter.js'
 
@@ -31,12 +39,15 @@ const is_create_response = scanner({
   success: boolean,
   errors: array(is_message),
   messages: array(is_message),
-  result: scanner({
-    created_at: string,
-    name: string,
-    uuid: string,
-    version: string
-  })
+  result: union(
+    scanner({
+      created_at: string,
+      name: string,
+      uuid: string,
+      version: string
+    }),
+    isNull
+  )
 })
 
 const is_delete_response = scanner({
@@ -156,7 +167,8 @@ export const D1 = ({ accountId, apiKey }: CFAuthParameter) => ({
     const json = await res.json()
 
     if (!is_create_response(json)) {
-      throw new Error('Invalid create response')
+      console.error(json)
+      throw new Error(`Invalid response in create ${name}`)
     }
 
     checkError(json)
