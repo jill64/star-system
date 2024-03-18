@@ -4,4 +4,9 @@ export type IndexKey = {
   unique: number
   origin: string
   partial: number
+  columns: {
+    seqno: number
+    cid: number
+    name: string
+  }[]
 }
