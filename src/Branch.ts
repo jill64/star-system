@@ -13,15 +13,12 @@ export class Branch {
   query: Prepared['query']
   delete: Prepared['delete']
   get: Prepared['get']
-  private name
 
-  constructor(d1: Prepared, name: string) {
+  constructor(d1: Prepared) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.query = d1.query
     this.delete = d1.delete
     this.get = d1.get
-
-    this.name = name
   }
 
   // https://developers.cloudflare.com/d1/reference/database-commands/

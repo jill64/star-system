@@ -21,13 +21,13 @@ export class StarSystem {
     })
 
     return res.result.map(
-      (branch) => new Branch(this.d1.prepare(branch.uuid), branch.name)
+      (branch) => new Branch(this.d1.prepare(branch.uuid))
     )
   }
 
   async createBranch(name: string): Promise<Branch> {
     const res = await this.d1.create(`${this.prefix}_branch_${name}`)
 
-    return new Branch(this.d1.prepare(res.result.uuid), res.result.name)
+    return new Branch(this.d1.prepare(res.result.uuid))
   }
 }
