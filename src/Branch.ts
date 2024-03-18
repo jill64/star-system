@@ -85,13 +85,15 @@ export class Branch {
 
         const columnDiff = {
           addColumns: head.table_info.filter(
-            (column) => !base.table_info.some((c) => c.cid === column.cid)
+            (column) => !base.table_info.some((c) => c.name === column.name)
           ),
           dropColumns: base.table_info.filter(
-            (column) => !head.table_info.some((c) => c.cid === column.cid)
+            (column) => !head.table_info.some((c) => c.name === column.name)
           ),
           modifyColumns: head.table_info.filter((column) => {
-            const baseColumn = base.table_info.find((c) => c.cid === column.cid)
+            const baseColumn = base.table_info.find(
+              (c) => c.name === column.name
+            )
 
             if (baseColumn === undefined) {
               return false
@@ -102,7 +104,7 @@ export class Branch {
               baseColumn.notnull !== column.notnull ||
               baseColumn.dflt_value !== column.dflt_value ||
               baseColumn.pk !== column.pk ||
-              baseColumn.name !== column.name
+              baseColumn.cid !== column.cid
             )
           })
         }
