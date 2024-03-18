@@ -31,8 +31,8 @@ export class Branch {
       .flatMap((table) => table.results)
       .filter(
         (t) =>
-          t.name !== 'sqlite_schema' &&
           t.name !== '_cf_KV' &&
+          t.name !== 'sqlite_schema' &&
           t.name !== 'sqlite_temp_schema'
       )
 
