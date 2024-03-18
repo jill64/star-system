@@ -26,7 +26,7 @@
   },
   "prettier": "@jill64/prettier-config",
   "devDependencies": {
-    "@jill64/eslint-config-ts": "1.1.10",
+    "@jill64/eslint-config-ts": "1.1.11",
     "@jill64/prettier-config": "1.0.0",
     "dotenv": "16.4.5",
     "typescript": "5.4.2"
@@ -46,7 +46,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/jill64/star-system.git",
-    "image": "https://opengraph.githubassets.com/37f3a25cdde41ac6e1ddd36893234ab27ad968cf703c37101a9ac2f41184c85e/jill64/star-system"
+    "image": "https://opengraph.githubassets.com/1682bdcb32128598a6cbbfc7eef70127ab9aad802912af754ffd03720af21903/jill64/star-system"
   },
   "keywords": [
     "branch",
