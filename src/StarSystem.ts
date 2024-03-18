@@ -26,6 +26,10 @@ export class StarSystem {
   async createBranch(name: string): Promise<Branch> {
     const res = await this.d1.create(`${this.prefix}_branch_${name}`)
 
+    if (!res.result) {
+      throw new Error('Invalid response')
+    }
+
     return new Branch(this.d1.prepare(res.result.uuid))
   }
 }
