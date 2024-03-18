@@ -1,0 +1,57 @@
+{
+  "name": "star-system",
+  "description": "⭐ Staging RDB with Cloudflare D1",
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist",
+    "!**/*.test.*"
+  ],
+  "exports": {
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && npx publint",
+    "prepack": "npm run build",
+    "test": "npx tsx test/index.test.ts",
+    "lint": "npx eslint . && npx depcheck",
+    "format": "npx prettier -w ."
+  },
+  "prettier": "@jill64/prettier-config",
+  "devDependencies": {
+    "@jill64/eslint-config-ts": "1.1.10",
+    "@jill64/prettier-config": "1.0.0",
+    "dotenv": "16.4.5",
+    "typescript": "5.4.2"
+  },
+  "dependencies": {
+    "typescanner": "0.5.3"
+  },
+  "homepage": "https://github.com/jill64/star-system#readme",
+  "license": "MIT",
+  "bugs": "https://github.com/jill64/star-system/issues",
+  "author": {
+    "name": "jill64",
+    "email": "intents.turrets0h@icloud.com",
+    "url": "https://github.com/jill64",
+    "image": "https://avatars.githubusercontent.com/u/143883742?v=4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jill64/star-system.git",
+    "image": "https://opengraph.githubassets.com/37f3a25cdde41ac6e1ddd36893234ab27ad968cf703c37101a9ac2f41184c85e/jill64/star-system"
+  },
+  "keywords": [
+    "branch",
+    "database",
+    "rdb",
+    "staging"
+  ]
+}
