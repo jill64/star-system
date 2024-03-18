@@ -198,9 +198,7 @@ export class Branch {
     await Promise.all(
       diff.modifyTables.flatMap((table) =>
         table.indexDiff.addIndexes.map((index) => {
-          const columns = index.columns
-            .map((column) => column.name)
-            .join(', ')
+          const columns = index.columns.map((column) => column.name).join(', ')
 
           return base.query(
             `CREATE INDEX ${index.name} ON ${table.name} (${columns})`
