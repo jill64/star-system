@@ -1,7 +1,7 @@
 {
   "name": "star-system",
   "description": "⭐ Staging RDB with Cloudflare D1",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "files": [
     "dist",
@@ -32,7 +32,7 @@
     "typescript": "5.4.3"
   },
   "dependencies": {
-    "typescanner": "0.5.3"
+    "d1-driver": "0.0.2"
   },
   "homepage": "https://github.com/jill64/star-system#readme",
   "license": "MIT",
