@@ -1,5 +1,5 @@
+import { D1 } from 'd1-driver'
 import { Branch } from './Branch.js'
-import { D1 } from './D1.js'
 import { CFAuthParameter } from './types/CFAuthParameter.js'
 
 export class StarSystem {
@@ -11,7 +11,7 @@ export class StarSystem {
       name: string
     }
   ) {
-    this.d1 = D1(params)
+    this.d1 = new D1(params.accountId, params.apiKey)
     this.prefix = params.name
   }
 
@@ -20,7 +20,7 @@ export class StarSystem {
       name: `${this.prefix}_branch`
     })
 
-    return res.result.map((branch) => new Branch(this.d1.prepare(branch.uuid)))
+    return res.result.map((branch) => new Branch(this.d1, branch.uuid))
   }
 
   async createBranch(name: string): Promise<Branch> {
@@ -30,6 +30,6 @@ export class StarSystem {
       throw new Error('Invalid response')
     }
 
-    return new Branch(this.d1.prepare(res.result.uuid))
+    return new Branch(this.d1, res.result.uuid)
   }
 }

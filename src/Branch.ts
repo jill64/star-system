@@ -1,4 +1,4 @@
-import type { D1 } from './D1.js'
+import type { D1 } from 'd1-driver'
 import { Column } from './types/Column.js'
 import { ColumnDiff } from './types/ColumnDiff.js'
 import { IndexDiff } from './types/IndexDiff.js'
@@ -6,26 +6,24 @@ import { IndexKey } from './types/IndexKey.js'
 import { Table } from './types/Table.js'
 import { TableDiff } from './types/TableDiff.js'
 
-type Prepared = ReturnType<ReturnType<typeof D1>['prepare']>
-
 const nonNullable = <T>(x: T): x is NonNullable<T> =>
   x !== null && x !== undefined
 
 export class Branch {
-  query: Prepared['query']
-  delete: Prepared['delete']
-  get: Prepared['get']
+  d1
+  uuid
 
-  constructor(d1: Prepared) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.query = d1.query
-    this.delete = d1.delete
-    this.get = d1.get
+  constructor(d1: D1, uuid: string) {
+    this.d1 = d1
+    this.uuid = uuid
   }
 
   // https://developers.cloudflare.com/d1/reference/database-commands/
   async get_schema() {
-    const table_list = await this.query<Table>(`PRAGMA table_list`)
+    const table_list = await this.d1.query<Table>(
+      this.uuid,
+      `PRAGMA table_list`
+    )
 
     const tables = table_list.result
       .flatMap((table) => table.results)
@@ -39,8 +37,9 @@ export class Branch {
     const map = await Promise.all(
       tables.map(async (table) => {
         const [table_info, index_list] = await Promise.all([
-          this.query<Column>(`PRAGMA table_info(${table.name})`),
-          this.query<Omit<IndexKey, 'columns'>>(
+          this.d1.query<Column>(this.uuid, `PRAGMA table_info(${table.name})`),
+          this.d1.query<Omit<IndexKey, 'columns'>>(
+            this.uuid,
             `PRAGMA index_list(${table.name})`
           )
         ])
@@ -49,9 +48,9 @@ export class Branch {
           index_list.result.map(({ results }) =>
             Promise.all(
               results.map(async (index) => {
-                const columns = await this.query<IndexKey['columns'][number]>(
-                  `PRAGMA index_info(${index.name})`
-                )
+                const columns = await this.d1.query<
+                  IndexKey['columns'][number]
+                >(this.uuid, `PRAGMA index_info(${index.name})`)
 
                 return {
                   ...index,
@@ -154,6 +153,14 @@ export class Branch {
       dropTables,
       modifyTables
     }
+  }
+
+  async query(sql: string) {
+    return this.d1.query(this.uuid, sql)
+  }
+
+  async delete() {
+    return this.d1.delete(this.uuid)
   }
 
   async mergeTo(
