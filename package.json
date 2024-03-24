@@ -1,7 +1,7 @@
 {
   "name": "star-system",
   "description": "⭐ Staging RDB with Cloudflare D1",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "files": [
     "dist",
