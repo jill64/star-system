@@ -20,7 +20,7 @@ export class StarSystem {
       name: `${this.prefix}_branch`
     })
 
-    return res.result.map((branch) => new Branch(this.d1, branch.uuid))
+    return res.result.map((branch) => new Branch(this.d1, branch))
   }
 
   async createBranch(name: string): Promise<Branch> {
@@ -30,6 +30,6 @@ export class StarSystem {
       throw new Error('Invalid response')
     }
 
-    return new Branch(this.d1, res.result.uuid)
+    return new Branch(this.d1, res.result)
   }
 }
