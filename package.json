@@ -32,7 +32,7 @@
     "typescript": "5.4.3"
   },
   "dependencies": {
-    "d1-driver": "0.0.3"
+    "d1-driver": "0.1.0"
   },
   "homepage": "https://github.com/jill64/star-system#readme",
   "license": "MIT",
