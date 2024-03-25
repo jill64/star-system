@@ -11,11 +11,17 @@ const nonNullable = <T>(x: T): x is NonNullable<T> =>
 
 export class Branch {
   d1
+  created_at
   uuid
+  name
+  version
 
-  constructor(d1: D1, uuid: string) {
+  constructor(d1: D1, info: Awaited<ReturnType<D1['list']>>['result'][number]) {
     this.d1 = d1
-    this.uuid = uuid
+    this.uuid = info.uuid
+    this.created_at = info.created_at
+    this.name = info.name
+    this.version = info.version
   }
 
   // https://developers.cloudflare.com/d1/reference/database-commands/
